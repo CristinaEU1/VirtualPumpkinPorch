@@ -2,7 +2,7 @@
 
 Candle-lit carved pumpkins for your Mac desktop. **Version 3.0**
 
-![The six pumpkin faces](faces-preview.png)
+ ![The six pumpkin faces](Virtual%20Pumpkin%20Porch%20v3/faces-preview.png)
 
 - A row of pumpkins sits on a "porch" just above your Dock.
 - Up to three little ones hop onto the top edge of whichever window is in front, and follow it when you switch or move windows.
