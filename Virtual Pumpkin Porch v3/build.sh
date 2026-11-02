@@ -1,15 +1,15 @@
 #!/bin/bash
-# Builds "Pumpkin Porch.app" next to this script.
+# Builds "Virtual Pumpkin Porch.app" next to this script.
 # Needs Apple's free Command Line Tools:  xcode-select --install
 set -e
 cd "$(dirname "$0")"
 
-APP="Pumpkin Porch.app"
+APP="Virtual Pumpkin Porch.app"
 echo "🎃 Carving pumpkins..."
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS"
 
-swiftc -O PumpkinPorch.swift -o "$APP/Contents/MacOS/PumpkinPorch"
+swiftc -O VirtualPumpkinPorch.swift -o "$APP/Contents/MacOS/VirtualPumpkinPorch"
 
 # App icon: turn AppIcon.png into a proper macOS .icns with Apple's own tools.
 mkdir -p "$APP/Contents/Resources"
@@ -31,10 +31,10 @@ cat > "$APP/Contents/Info.plist" <<'EOF'
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>CFBundleName</key><string>Pumpkin Porch</string>
-    <key>CFBundleDisplayName</key><string>Pumpkin Porch</string>
-    <key>CFBundleIdentifier</key><string>local.pumpkinporch</string>
-    <key>CFBundleExecutable</key><string>PumpkinPorch</string>
+    <key>CFBundleName</key><string>Virtual Pumpkin Porch</string>
+    <key>CFBundleDisplayName</key><string>Virtual Pumpkin Porch</string>
+    <key>CFBundleIdentifier</key><string>local.virtualpumpkinporch</string>
+    <key>CFBundleExecutable</key><string>VirtualPumpkinPorch</string>
     <key>CFBundleIconFile</key><string>AppIcon</string>
     <key>CFBundlePackageType</key><string>APPL</string>
     <key>CFBundleVersion</key><string>3.0</string>

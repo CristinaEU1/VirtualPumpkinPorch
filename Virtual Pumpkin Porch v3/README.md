@@ -1,4 +1,4 @@
-# 🎃 Pumpkin Porch
+# 🎃 Virtual Pumpkin Porch
 
 Candle-lit carved pumpkins for your Mac desktop. **Version 3.0**
 
@@ -41,16 +41,18 @@ Click the 🎃 in the menu bar to open the control panel. It's an ordinary windo
    bash build.sh
    ```
 
-5. Double-click **Pumpkin Porch.app**, which appears in the same folder with its own pumpkin icon (made from `AppIcon.png`).
+5. Double-click **Virtual Pumpkin Porch.app**, which appears in the same folder with its own pumpkin icon (made from `AppIcon.png`).
 
 For *Start at login*, move the app into your **Applications** folder first.
 To stop it, open the panel and click **Quit**.
 
 **Updating from an earlier version:** quit the old app first, then build and open the new one. Your stats are kept.
 
+**If you had the app under its old name, "Pumpkin Porch":** the new build is called **Virtual Pumpkin Porch.app**. Your stats and choices move over automatically the first time it starts. Delete the old **Pumpkin Porch.app**, and if you used *Start at login*, switch it on again in the panel.
+
 ## Your data and privacy
 
-Pumpkin Porch can record how it is used, to support research on the app. Here is exactly how that works.
+Virtual Pumpkin Porch can record how it is used, to support research on the app. Here is exactly how that works.
 
 **It's opt-in.** On first launch, the app explains what it records and asks. Tracking stays **off** until you turn it on, and you can switch it on or off anytime in the panel.
 
@@ -69,7 +71,7 @@ Every record is tagged with a **random ID**. It is not your name or email, and i
 **It stays on your Mac.** The app makes no network connections at all. Your data lives in:
 
 ```
-~/Library/Application Support/Pumpkin Porch/
+~/Library/Application Support/Virtual Pumpkin Porch/
 ```
 
 | File | What's in it |
@@ -88,7 +90,7 @@ Every record is tagged with a **random ID**. It is not your name or email, and i
 
 ## Credits
 
-Inspired by [Fall Desktop](https://github.com/starrlord/FallDesktop) for Windows by starrlord. Pumpkin Porch is a separate, original Mac app and shares no code with it.
+Inspired by [Fall Desktop](https://github.com/starrlord/FallDesktop) for Windows by starrlord. Virtual Pumpkin Porch is a separate, original Mac app and shares no code with it.
 
 Written with the help of Claude.
 
