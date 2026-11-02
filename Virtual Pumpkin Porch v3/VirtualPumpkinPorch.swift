@@ -1,4 +1,4 @@
-// Virtual Pumpkin Porch 3.0: carved pumpkins that sit on your Mac.
+// Virtual Pumpkin Porch 3.1: carved pumpkins that sit on your Mac.
 //
 // A row of candle-lit pumpkins sits on a "porch" just above the Dock, and a
 // few little ones hop onto the top edge of whatever window is in front.
@@ -18,7 +18,7 @@
 import AppKit
 import ServiceManagement
 
-let appVersion = "3.0"
+let appVersion = "3.1"
 
 // MARK: - Small helpers
 
@@ -90,6 +90,7 @@ struct Choices: Codable {
     var perch = true              // little pumpkins sit on windows
     var sitters = 2               // 1 ... 3
     var bats = "normal"           // off | rare | normal | flock
+    var batsInFront = true        // true: bats fly in front of windows; false: behind them, over the desktop
     var fright = "gentle"         // gentle | big
     var paused = false
     var hideInFullscreen = true
@@ -107,6 +108,7 @@ struct Choices: Codable {
         perch = try c.decodeIfPresent(Bool.self, forKey: .perch) ?? d.perch
         sitters = try c.decodeIfPresent(Int.self, forKey: .sitters) ?? d.sitters
         bats = try c.decodeIfPresent(String.self, forKey: .bats) ?? d.bats
+        batsInFront = try c.decodeIfPresent(Bool.self, forKey: .batsInFront) ?? d.batsInFront
         fright = try c.decodeIfPresent(String.self, forKey: .fright) ?? d.fright
         paused = try c.decodeIfPresent(Bool.self, forKey: .paused) ?? d.paused
         hideInFullscreen = try c.decodeIfPresent(Bool.self, forKey: .hideInFullscreen) ?? d.hideInFullscreen
@@ -387,6 +389,7 @@ final class Bat {
 
 final class OverlayView: NSView {
     weak var controller: AppController?
+    var drawsBats = false     // false: the pumpkin layer; true: the bat layer
     override var isOpaque: Bool { false }
 
     override func draw(_ dirtyRect: NSRect) {
@@ -398,17 +401,20 @@ final class OverlayView: NSView {
         let glow = CGFloat(ctl.opt.glow)
         c.saveGState()
         c.translateBy(x: -o.x, y: -o.y)
-        for p in ctl.pumpkins where p.alpha > 0 && p.bounds.intersects(globalDirty) {
-            ctl.drawPumpkin(c, p, t: t, glow: glow)
-        }
-        for b in ctl.bats where b.bounds.intersects(globalDirty) {
-            ctl.drawBat(c, b, t: t)
+        if drawsBats {
+            for b in ctl.bats where b.bounds.intersects(globalDirty) {
+                ctl.drawBat(c, b, t: t)
+            }
+        } else {
+            for p in ctl.pumpkins where p.alpha > 0 && p.bounds.intersects(globalDirty) {
+                ctl.drawPumpkin(c, p, t: t, glow: glow)
+            }
         }
         c.restoreGState()
     }
 }
 
-func makeOverlay(for screen: NSScreen, controller: AppController) -> NSWindow {
+func makeOverlay(for screen: NSScreen, controller: AppController, bats: Bool = false) -> NSWindow {
     let w = NSWindow(contentRect: screen.frame, styleMask: .borderless, backing: .buffered, defer: false)
     w.setFrame(screen.frame, display: false)
     w.isOpaque = false
@@ -419,6 +425,7 @@ func makeOverlay(for screen: NSScreen, controller: AppController) -> NSWindow {
     w.isReleasedWhenClosed = false
     let v = OverlayView(frame: NSRect(origin: .zero, size: screen.frame.size))
     v.controller = controller
+    v.drawsBats = bats
     w.contentView = v
     return w
 }
@@ -426,7 +433,8 @@ func makeOverlay(for screen: NSScreen, controller: AppController) -> NSWindow {
 // MARK: - App
 
 final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
-    var windows: [NSWindow] = []
+    var windows: [NSWindow] = []        // pumpkin layer, one per screen
+    var batWindows: [NSWindow] = []     // bat layer, one per screen, in the same order
     var pumpkins: [Pumpkin] = []
     var bats: [Bat] = []
     var timer: Timer?
@@ -513,7 +521,7 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func context() -> String {
         "macOS \(macOSVersion); screens \(NSScreen.screens.count); remember_choices \(settings.rememberChoices); " +
         "faces \(opt.faces); count \(opt.count); size \(fmt(opt.size)); glow \(fmt(opt.glow)); " +
-        "sit_on_windows \(opt.perch); sitters \(opt.sitters); bats \(opt.bats); fright \(opt.fright); " +
+        "sit_on_windows \(opt.perch); sitters \(opt.sitters); bats \(opt.bats); bats_in_front \(opt.batsInFront); fright \(opt.fright); " +
         "paused \(opt.paused); hide_in_fullscreen \(opt.hideInFullscreen); theme \(opt.theme)"
     }
 
@@ -717,18 +725,32 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     // MARK: setup
 
+    var allOverlays: [NSWindow] { windows + batWindows }
+
     func rebuildWindows() {
-        windows.forEach { $0.orderOut(nil); $0.close() }
+        allOverlays.forEach { $0.orderOut(nil); $0.close() }
         windows = NSScreen.screens.map { makeOverlay(for: $0, controller: self) }
+        batWindows = NSScreen.screens.map { makeOverlay(for: $0, controller: self, bats: true) }
+        applyBatLayer()
         applyFullscreenBehaviour()
-        if !opt.paused { windows.forEach { $0.orderFrontRegardless() } }
+        if !opt.paused { allOverlays.forEach { $0.orderFrontRegardless() } }
+    }
+
+    /// In front: the same level as the pumpkins, above every app window.
+    /// Behind: just above the desktop wallpaper and icons, below every app window.
+    func applyBatLayer() {
+        let behind = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.desktopIconWindow)) + 1)
+        for w in batWindows {
+            w.level = opt.batsInFront ? .floating : behind
+            if !opt.paused { w.orderFrontRegardless() }
+        }
     }
 
     /// The overlays may always join full-screen spaces; whether they show there is
     /// decided screen by screen in updateFullscreenHiding().
     func applyFullscreenBehaviour() {
         let b: NSWindow.CollectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle, .fullScreenAuxiliary]
-        windows.forEach { $0.collectionBehavior = b }
+        allOverlays.forEach { $0.collectionBehavior = b }
         updateFullscreenHiding()
     }
 
@@ -815,6 +837,7 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
         for (i, w) in windows.enumerated() {
             let a: CGFloat = covered.contains(i) ? 0 : 1
             if w.alphaValue != a { w.alphaValue = a }
+            if i < batWindows.count, batWindows[i].alphaValue != a { batWindows[i].alphaValue = a }
         }
     }
 
@@ -902,13 +925,15 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
         timer = t
     }
 
-    func invalidate(_ r: CGRect) {
-        for w in windows where w.frame.intersects(r) {
+    func invalidate(_ r: CGRect, in layer: [NSWindow]? = nil) {
+        for w in (layer ?? windows) where w.frame.intersects(r) {
             w.contentView?.setNeedsDisplay(r.offsetBy(dx: -w.frame.minX, dy: -w.frame.minY))
         }
     }
 
-    func redrawAll() { windows.forEach { $0.contentView?.needsDisplay = true } }
+    func invalidateBats(_ r: CGRect) { invalidate(r, in: batWindows) }
+
+    func redrawAll() { allOverlays.forEach { $0.contentView?.needsDisplay = true } }
 
     /// Clears wherever the pumpkin was last drawn and paints it where it is now.
     /// Whatever moved it (a hop, a window being dragged, a fade), nothing is left behind.
@@ -1010,10 +1035,10 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
             b.x += b.vx * dt
             b.y = b.baseY + CGFloat(sin(t * 1.7 + b.phase)) * 22
             let r = b.bounds
-            invalidate(b.painted.map { $0.union(r) } ?? r)
+            invalidateBats(b.painted.map { $0.union(r) } ?? r)
             b.painted = r
         }
-        for b in bats where b.gone { if let r = b.painted { invalidate(r) } }
+        for b in bats where b.gone { if let r = b.painted { invalidateBats(r) } }
         bats.removeAll { $0.gone }
     }
 
@@ -1482,6 +1507,7 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
             row("Candle glow", [slider(opt.glow, 0, 1, #selector(glowChanged(_:)))]),
             row("Sit on windows", [toggle(opt.perch, #selector(perchChanged(_:))), sitters]),
             row("Bats", [segments(["Off", "Rare", "Normal", "Flock"], batModes.firstIndex(of: opt.bats) ?? 2, #selector(batsChanged(_:)))]),
+            row("Bats in front of windows", [toggle(opt.batsInFront, #selector(batsLayerChanged(_:)))]),
             row("Fright reaction", [segments(["Gentle wobble", "Big jump"], opt.fright == "big" ? 1 : 0, #selector(frightChanged(_:)))]),
             button("Rearrange the pumpkins", #selector(shuffle)),
             header("Behaviour"),
@@ -1623,6 +1649,13 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
         record("bats", from: old, to: opt.bats)
     }
 
+    @objc func batsLayerChanged(_ s: NSSwitch) {
+        let old = opt.batsInFront
+        opt.batsInFront = s.state == .on
+        applyBatLayer()
+        record("bats_in_front", from: "\(old)", to: "\(opt.batsInFront)")
+    }
+
     @objc func frightChanged(_ s: NSSegmentedControl) {
         let old = opt.fright
         opt.fright = s.selectedSegment == 1 ? "big" : "gentle"
@@ -1635,11 +1668,11 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
         guard old != opt.paused else { return }
         if opt.paused {
             timer?.invalidate(); timer = nil
-            windows.forEach { $0.orderOut(nil) }
+            allOverlays.forEach { $0.orderOut(nil) }
             pausedAt = Date()
             logEvent("pause")
         } else {
-            windows.forEach { $0.orderFrontRegardless() }
+            allOverlays.forEach { $0.orderFrontRegardless() }
             startTimer()
             let d = pausedAt.map { Date().timeIntervalSince($0) } ?? 0
             if tracking { stats.secondsPaused += d }
