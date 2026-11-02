@@ -1,6 +1,6 @@
 # 🎃 Virtual Pumpkin Porch
 
-Candle-lit carved pumpkins for your Mac desktop. **Version 3.0**
+Candle-lit carved pumpkins for your Mac desktop. **Version 3.1**
 
 ![The six pumpkin faces](Virtual%20Pumpkin%20Porch%20v3/faces-preview.png)
 
@@ -8,7 +8,7 @@ Candle-lit carved pumpkins for your Mac desktop. **Version 3.0**
 - Up to three little ones hop onto the top edge of whichever window is in front, and follow it when you switch or move windows.
 - Point at a pumpkin and it gets a fright: a gentle wobble or a big jump.
 - **Cute**, **spooky** or **mixed** faces.
-- Bats with glowing eyes flap past: rarely, now and then, or in whole flocks.
+- Bats with glowing eyes flap past: rarely, now and then, or in whole flocks, in front of your windows or behind them, over the desktop.
 - Clicks always pass straight through to whatever is underneath.
 
 ## The control panel
@@ -17,7 +17,7 @@ Click the 🎃 in the menu bar to open the control panel. It's an ordinary windo
 
 | Section | Controls |
 |---|---|
-| **Pumpkins** | Faces (tap a preview), how many per screen (1–10), size, candle glow (off to bright), sit on windows (on/off, 1–3 pumpkins), bats (off, rare, normal, flock), fright reaction (gentle wobble, big jump), rearrange |
+| **Pumpkins** | Faces (tap a preview), how many per screen (1–10), size, candle glow (off to bright), sit on windows (on/off, 1–3 pumpkins), bats (off, rare, normal, flock), bats in front of windows (on/off), fright reaction (gentle wobble, big jump), rearrange |
 | **Behaviour** | Pause, hide in full-screen apps, start at login, remember my choices |
 | **Look** | Panel theme: Halloween, System, Light or Dark |
 | **Your data** | Data tracking on/off, open data folder, export, delete |
